@@ -1,12 +1,3 @@
-#include <MinimumSerial.h>
-#include <SdFat.h>
-#include <SdFatConfig.h>
-#include <SdFatmainpage.h>
-#include <SdFatUtil.h>
-#include <SdInfo.h>
-#include <SdSpi.h>
-#include <SdSpiCard.h>
-
 /*
   Listfiles
 
@@ -31,9 +22,8 @@
 
  */
 #include <SPI.h>
-//#include <SD.h>
+#include <SD.h>
 
-SdFat SD;
 File root;
 
 void setup() {
@@ -108,7 +98,7 @@ boolean effacerLigne(String chemin, String nomFichier, uint8_t numeroLigne){
   }
   fichier.close(); buf.close();           // Fermeture du fichier
   SD.remove(chemin + nomFichier);
-  SD.rename(chemin + "buffer.txt", chemin + nomFichier);
+  renommer(chemin, "buffer.txt", chemin,  nomFichier);
   /*if (SD.exists(chemin + "buffer.txt")) { // Suppressin du fichier "buffer.txt" si restant
     SD.remove(chemin + "buffer.txt"); 
   }*/
@@ -162,5 +152,40 @@ boolean effacerLigneVers(String cheminIN, String nomFichierIN, String cheminOUT,
   return (ok && ligneParcourue) ;
 }
 
-
+/**
+ * Créée une copie du fichier d'entree, la ligne indiquée étant supprimee.
+ * 
+ * @param cheminIN        Le chemin du fichier
+ * @param nomFichierIN    Le nom du fichier à renommer
+ * @param cheminOUT       Le chemin du fichier
+ * @param nomFichierOUT   Le nom du fichier après renomage
+ * @return                Si le renommage a bien fonctionné
+ */
+boolean renommer(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT){
+  boolean ok = true;
+  File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
+  if(SD.exists(cheminOUT)){
+    if((cheminIN + nomFichierIN) == (cheminOUT + nomFichierOUT)){
+       ok = false; // Le fichier de sortie existe deja, et il n'est pas autorise de le supprimer.
+    }
+  } else {
+    ok = false; // Le chemin specifie n'existe pas.
+  }
+  if (ok){  // Si toutes les conditions nécessaires sont valides, on procède alors.
+    File fOut = SD.open(cheminOUT + nomFichierOUT, FILE_WRITE);
+    String ligne = ""; uint8_t numLigne = 0; uint8_t i;
+    while(fIn.available()){             // Lecture du fichier ligne par ligne
+      ligne += fIn.readStringUntil('\n');      
+      fOut.println(""+ligne);
+      ligne = ""; 
+    }
+                // Réinitialisation de la chaîne de caractère "ligne"
+    fOut.close();
+    }
+   fIn.close();            // Fermeture des fichiers
+   if (SD.exists(cheminIN + nomFichierIN)) { // Suppressin du fichier "buffer.txt" si restant
+    SD.remove(cheminIN + nomFichierIN); 
+   }
+  return ok  ;
+}
 
