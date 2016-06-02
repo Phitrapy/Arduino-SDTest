@@ -18,3 +18,9 @@ String Warning::folderDoesNotExist(String nomDossier){
 	warning += "\" n'a pas été trouvé au démarrage du système. Il en sera créé un nouveau." ;
 	return warning;	
 }
+
+String Warning::userCardIDNotFound(String cardID){
+  String warning = "[Warning] Aucun utilisateur dont l'ID est \""+ cardID;
+  warning += "\" n'a été trouvé.";
+  return warning;
+}

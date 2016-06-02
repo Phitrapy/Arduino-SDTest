@@ -14,4 +14,10 @@ String Error::cannotOpen(String nomFichier){
 	return error;
 }
 
+String Error::peopleNotRemoved(String nom, String prenom, String cardID){
+  String error = "[Error] L'utilisateur \""+ nom +" "+ prenom +" "+ cardID;
+  error += "\" n'a pas pu être supprimé." ;
+  return error;
+}
+
 

@@ -9,6 +9,7 @@ class Error{
 
 public:
 	static String cannotOpen(String nomFichier);
+  static String peopleNotRemoved(String nom, String prenom, String cardID);
 
 private: 
 

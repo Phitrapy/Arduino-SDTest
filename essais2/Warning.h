@@ -14,7 +14,7 @@ class Warning{
 public:
 	static String logDoesNotExist(String nomFichier);
 	static String folderDoesNotExist(String nomDossier);
-
+  static String userCardIDNotFound(String cardID);
 private:
 
 };
