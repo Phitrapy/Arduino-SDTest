@@ -25,26 +25,26 @@
 #include <SD.h>
 #include "SysSD.h"
 
-File root;
-
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  SysSD sysSD;
-
   SD.remove("error.txt");
+  SysSD sysSD;
   sysSD.init();
-
-  sysSD.removePeople("Colas", "Pe", "CARDID1");
-//  sysSD.editPeople("Hennin", "Matthieu", "CARDID4");
-//  sysSD.addPeople("Cesari", "Matthieu", "CARDIDGG");
+  delay(1000);
+  SysSD::removePeople("Colas", "Pe", "CARDID1");
+  //SysSD::editPeople("Hennin", "Matthieu", "CARDID4");
+  //SysSD::addPeople("Cesari", "Matthieu", "CARDIDGG");
+  //SysSD::renommer("/", "test.txt", "/", "yolo.txt");
   
   Serial.println("All done!");
+
+  
 }
 
 void loop() {
-  // nothing happens after setup finishes.
+  
 }

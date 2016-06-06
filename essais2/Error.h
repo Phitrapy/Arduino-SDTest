@@ -10,6 +10,11 @@ class Error{
 public:
 	static String cannotOpen(String nomFichier);
   static String peopleNotRemoved(String nom, String prenom, String cardID);
+  static String bufNotRemoved();
+  static String renommerGeneric();
+  static String renommerInputFileDoesntExists();
+  static String renommerOutputFileAlreadyExists();
+  static String renommerOutputPathDoesntExist();
 
 private: 
 

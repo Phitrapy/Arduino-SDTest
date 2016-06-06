@@ -29,32 +29,32 @@ void SysSD::init(){
 		if (SD.exists("errors.txt")) {
 			File errors = SD.open("errors.txt", FILE_WRITE);
 			errors.close();
-			this->addWarning(Warning::logDoesNotExist("errors.txt"));
+			SysSD::addWarning(Warning::logDoesNotExist("errors.txt"));
 		}
 		//Log "nodes.txt"
 		if (!SD.exists("nodes.txt")) {
-			this->createLog_Nodes();
-			this->addWarning(Warning::logDoesNotExist("nodes.txt"));
+			SysSD::createLog_Nodes();
+			SysSD::addWarning(Warning::logDoesNotExist("nodes.txt"));
 		}
 		//Log "users.txt"
 		if (!SD.exists("users.txt")) {
-			this->createLog_Users();
-			this->addWarning(Warning::logDoesNotExist("users.txt"));
+			SysSD::createLog_Users();
+			SysSD::addWarning(Warning::logDoesNotExist("users.txt"));
 		}
 		//Log "admins.txt"
 		if (!SD.exists("admins.txt")) {
-			this->createLog_Admins();
-			this->addWarning(Warning::logDoesNotExist("admins.txt"));
+			SysSD::createLog_Admins();
+			SysSD::addWarning(Warning::logDoesNotExist("admins.txt"));
 		}
 		//Log "settings.txt"
 		if (!SD.exists("settings.txt")) {
-			this->createLog_Settings();
-			this->addWarning(Warning::logDoesNotExist("settings.txt"));
+			SysSD::createLog_Settings();
+			SysSD::addWarning(Warning::logDoesNotExist("settings.txt"));
 		}
 		//Log "actions.txt"
 		if (!SD.exists("actions.txt")) {
-			this->createLog_Actions();
-			this->addWarning(Warning::logDoesNotExist("actions.txt"));
+			SysSD::createLog_Actions();
+			SysSD::addWarning(Warning::logDoesNotExist("actions.txt"));
 		}
 	}
 }
@@ -157,11 +157,11 @@ bool SysSD::createLog_Errors(){
 bool SysSD::addAction(String titre, String message){
 	File actions = SD.open("actions.txt", FILE_WRITE);
 	if(actions){
-		String action = /*formatDate() + */ this->glandouillHeure();
+		String action = /*formatDate() + */ SysSD::glandouillHeure();
 		action+=" [" + titre + "] " + message;
 		actions.println(action);
 	} else {
-		this->addError(Error::cannotOpen("action.txt"));
+		SysSD::addError(Error::cannotOpen("action.txt"));
 	}
 	actions.close();
 }
@@ -177,7 +177,7 @@ bool SysSD::addPeople(String nom, String prenom, String cardID){
 		String userStr = "" + nom + " " + prenom + " " + cardID;
 		users.println(userStr);
 	} else {
-		this->addError(Error::cannotOpen("action.txt"));
+		SysSD::addError(Error::cannotOpen("action.txt"));
 	}
 	users.close();
 }
@@ -190,14 +190,14 @@ bool SysSD::addPeople(String nom, String prenom, String cardID){
 */
 bool SysSD::editPeople(String nom, String prenom, String cardID){
 	uint8_t line;
-	bool found = this->findUserCardID(cardID, &line);
+	bool found = SysSD::findUserCardID(cardID, &line);
   if (found){
-    found = this->findUserCardID(nom, prenom, &line); // Verification que l'ID correspond bien à la personne qu'on cherche.
+    found = SysSD::findUserCardID(nom, prenom, &line); // Verification que l'ID correspond bien à la personne qu'on cherche.
   }
   if (found){
     String currentUser[3];
-    this->removePeople(currentUser[0], currentUser[0], currentUser[0]);
-    this->addPeople(nom, prenom, cardID);
+    SysSD::removePeople(currentUser[0], currentUser[0], currentUser[0]);
+    SysSD::addPeople(nom, prenom, cardID);
 	}
  return found;
 }
@@ -208,14 +208,15 @@ bool SysSD::editPeople(String nom, String prenom, String cardID){
  */
 bool SysSD::removePeople(String nom, String prenom, String cardID){
 	uint8_t nLigne;
-  bool found = this->findUserCardID(cardID, &nLigne);
   bool efface = false;
-  if (found){
-    efface = this->effacerLigne("/", "users.txt", nLigne);
+  if (SysSD::findUserCardID(cardID, &nLigne)){
+    if (SysSD::effacerLigneVers("/",  "users.txt", "/", "buffer.txt", nLigne, false)){
+      if(SysSD::renommer("/", "buffer.txt", "/",  "users.txt")) efface = true;
+    }
   }
-  if(!efface){
-    this->addError(Error::peopleNotRemoved(nom, prenom, cardID));
-  }
+  if(!efface)
+    SysSD::addError(Error::peopleNotRemoved(nom, prenom, cardID));
+  
 	return efface;
 }
 
@@ -230,7 +231,7 @@ bool SysSD::cleanCardID(String cardID){
   File root = SD.open("/");
   String path;
   while (true) {
-    path = "/";
+    path = "";
     File entry =  root.openNextFile();
     if (! entry) {
       // no more files
@@ -255,7 +256,7 @@ bool SysSD::cleanCardID(String oldCardID, String newCardID){
   File root = SD.open("/");
   String path;
   while (true) {
-    path = "/";
+    path = "";
     File entry =  root.openNextFile();
     if (! entry) {
       // no more files
@@ -264,7 +265,7 @@ bool SysSD::cleanCardID(String oldCardID, String newCardID){
     if (entry.isDirectory()) {
       path += entry.name(); path += "/";
       if(SD.exists(path+oldCardID)){
-        this->renommer(path, oldCardID, path, newCardID);
+        SysSD::renommer(path, oldCardID, path, newCardID);
       }
     }
     entry.close();
@@ -280,7 +281,7 @@ bool SysSD::addNode(String titre, uint8_t nodesID, String type, uint8_t settings
 		nodes.println(door);
     nodes.close();
 	} else {
-		this->addError(Error::cannotOpen("nodes.txt"));
+		SysSD::addError(Error::cannotOpen("nodes.txt"));
 	}
 }
 
@@ -332,30 +333,6 @@ bool SysSD::addWarning(String warning){
 	return result;
 }
 
-
-/*
-* Vérifie si un utilisateur existe en se basant sur son CardID
-*
-*	A VALIDER/TESTER
-*/
-bool SysSD::findUserCardID(String cardID){
-	bool found = false;
-	String l_line = "";
-	File users = SD.open("users.txt", FILE_READ);
-	uint8_t nbLine = 0;
-	while (users.available() != 0) {
-		l_line = users.readStringUntil('\n');
-		l_line = l_line.substring(l_line.length(), 3);
-		if (l_line == cardID) {
-			found = true;
-			break;
-		}
-	}
-	users.close();
-	return found;
-}
-
-
 /*
 * Vérifie si un utilisateur existe en se basant sur son CardID et donne la ligne correspondante
 * 
@@ -376,7 +353,7 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line){
 	  nbLine++;
     l_line = "";
 		l_line = users.readStringUntil('\n');
-      this->splitCardID(l_line, ' ', &l_line2);
+      SysSD::splitCardID(l_line, ' ', &l_line2);
       //Serial.println(l_line2+" "+cardID);
       //Serial.println(""+cardID);
       //Serial.println(""+l_line2);
@@ -397,9 +374,11 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line){
    Serial.println(l_line);
 	}
 	users.close();
-  Serial.println("[Info] Fichier \"users.txt\" parcouru.");
+  
   if (!found){
-    this->addWarning(Warning::userCardIDNotFound(cardID));
+    SysSD::addWarning(Warning::userCardIDNotFound(cardID));
+  } else {
+    Serial.println("[Info] utilisateur trouvé.");
   }
 	return found;
 }
@@ -432,7 +411,7 @@ bool SysSD::findUserCardID(String nom, String prenom, uint8_t* line){
     }
     users.close();
   } else {
-    this->addError(Error::cannotOpen("users.txt"));
+    SysSD::addError(Error::cannotOpen("users.txt"));
   }
   return found;
 }
@@ -467,12 +446,13 @@ boolean SysSD::effacerLigne(String chemin, String nomFichier, uint8_t numeroLign
   }
   fichier.close(); buf.close();           // Fermeture du fichier
   SD.remove(chemin + nomFichier);
-  renommer(chemin, "buffer.txt", chemin,  nomFichier);
   /*if (SD.exists(chemin + "buffer.txt")) { // Suppressin du fichier "buffer.txt" si restant
     SD.remove(chemin + "buffer.txt"); 
   }*/
   bufSuppr = !SD.exists(chemin + "buffer.txt");
-  
+  if(!bufSuppr){
+    SysSD::addError(Error::bufNotRemoved());
+  }
   return (ligneParcourue && bufSuppr);
 }
 
@@ -492,17 +472,15 @@ boolean SysSD::effacerLigneVers(String cheminIN, String nomFichierIN, String che
   boolean ligneParcourue = false;
   boolean ok = true;
   File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
-  if(SD.exists(cheminOUT)){
-    if(SD.exists(cheminOUT + nomFichierOUT)){
-      if (suppr){                             // Autorisation d'ecrasement accordee.
-        SD.remove(cheminOUT + nomFichierOUT); 
-      } else {                                // Autorisation d'ecrasement non accordee.
-        ok = false; // Le fichier de sortie existe deja, et il n'est pasautorise de le supprimer.
-      }
+  if(SD.exists(cheminOUT + nomFichierOUT)){
+    if (suppr){                             // Autorisation d'ecrasement accordee.
+      SD.remove(cheminOUT + nomFichierOUT); 
+    } else {                                // Autorisation d'ecrasement non accordee.
+      ok = false; // Le fichier de sortie existe deja, et il n'est pasautorise de le supprimer.
+      Serial.println("1");
     }
-  } else {
-    ok = false; // Le chemin specifie n'existe pas.
   }
+
   if (ok){  // Si toutes les conditions nécessaires sont valides, on procède alors.
     File fOut = SD.open(cheminOUT + nomFichierOUT, FILE_WRITE);
     String ligne = ""; uint8_t numLigne = 0; uint8_t i;
@@ -516,7 +494,7 @@ boolean SysSD::effacerLigneVers(String cheminIN, String nomFichierIN, String che
       ligne = "";                           // Réinitialisation de la chaîne de caractère "ligne"
       numLigne++;
     }
-    fIn.close(); fOut.close();           // Fermeture des fichiers
+    fIn.close(); fOut.close();              // Fermeture des fichiers
   }
   return (ok && ligneParcourue) ;
 }
@@ -532,26 +510,31 @@ boolean SysSD::effacerLigneVers(String cheminIN, String nomFichierIN, String che
  */
 boolean SysSD::renommer(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT){
   boolean ok = true;
-  File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
-  if(SD.exists(cheminOUT)){
-    if((cheminIN + nomFichierIN) == (cheminOUT + nomFichierOUT)){
+  if(!SD.exists(cheminIN + nomFichierIN)){
+    ok = false;
+    SysSD::addError(Error::renommerGeneric());
+    Serial.println("1");
+  }
+  if((cheminIN + nomFichierIN) == (cheminOUT + nomFichierOUT)){
        ok = false; // Le fichier de sortie existe deja, et il n'est pas autorise de le supprimer.
-    }
-  } else {
-    ok = false; // Le chemin specifie n'existe pas.
+       SysSD::addError(Error::renommerGeneric());
+       Serial.println("2");
   }
   if (ok){  // Si toutes les conditions nécessaires sont valides, on procède alors.
+    Serial.println(cheminIN + nomFichierIN);
+    Serial.println(cheminOUT + nomFichierOUT);
+    File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
     File fOut = SD.open(cheminOUT + nomFichierOUT, FILE_WRITE);
-    String ligne = ""; uint8_t numLigne = 0; uint8_t i;
+    String ligne = "";
     while(fIn.available()){             // Lecture du fichier ligne par ligne
       ligne += fIn.readStringUntil('\n');      
-      fOut.println(""+ligne);
-      ligne = ""; 
+      fOut.println(ligne);
+      ligne = "";                 // Réinitialisation de la chaîne de caractère "ligne"
     }
-                // Réinitialisation de la chaîne de caractère "ligne"
-    fOut.close();
+                
+    fIn.close();  fOut.close();
     }
-   fIn.close();            // Fermeture des fichiers
+               // Fermeture des fichiers
    if (SD.exists(cheminIN + nomFichierIN)) { // Suppressin du fichier "buffer.txt" si restant
     SD.remove(cheminIN + nomFichierIN); 
    }
@@ -562,7 +545,7 @@ boolean SysSD::renommer(String cheminIN, String nomFichierIN, String cheminOUT, 
  * Tentative de méthode "split". Sérieusement les mecs... Pourquoi ça n'existe pas déjà??
  */
 void SysSD::splitCardID(String str, char tok, String* cardID){
-  String buf = ""; int j = 0; // ici j max = 3, car 3 données par utilisateur (nom, prenom, cardid)
+  String buf = ""; int j = 0; // ici jMax = 3, car 3 données par utilisateur (nom, prenom, cardid)
   for(int i = 0; i < str.length()-1; i++){
     if (str[i] == tok){
       buf = "";
